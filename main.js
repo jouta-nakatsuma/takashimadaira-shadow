@@ -22,8 +22,9 @@ const DEFAULT_BUILDING_COORDS = [
 // 日の出/日の入りの縁で影が消えないようにするマージン（ms）
 const SUN_MARGIN_MS = 6 * 60 * 1000; // 6分（好みで調整可）
 
-// ローカル保存キー（バージョン付き）
+// ローカル保存キー
 const STORAGE_KEY = 'buildingCoords_v2';
+const HEIGHT_KEY   = 'buildingHeight_v1';   // ← 高さの保存キー
 
 // 実体となる可変配列
 const buildingCoords = [...DEFAULT_BUILDING_COORDS];
@@ -42,7 +43,7 @@ const buildingPolygon = L.polygon(buildingCoords, {
   fillOpacity: 0.5
 }).addTo(map);
 
-buildingPolygon.bindPopup('新棟予定地（高さ110m）');
+buildingPolygon.bindPopup('新棟予定地（高さ可変）');
 
 // ---- 保存済み座標があれば反映（v2優先、次にレガシーキー） ----
 (function loadSavedPolygon() {
@@ -176,6 +177,39 @@ map.on(L.Draw.Event.EDITED, (e) => {
   });
 });
 
+// ===== 高さスライダー =====
+const heightSlider = document.getElementById('heightSlider');
+const heightValue  = document.getElementById('heightValue');
+
+// 初期化（保存値があれば反映）
+(function initHeight() {
+  if (!heightSlider) return;
+  const saved = localStorage.getItem(HEIGHT_KEY);
+  if (saved !== null) {
+    heightSlider.value = String(Math.min(110, Math.max(3, Number(saved) || 110)));
+  }
+  // 表示更新
+  if (heightValue) heightValue.textContent = `${heightSlider.value}m`;
+})();
+
+// 値変更で保存＆影再描画
+if (heightSlider) {
+  heightSlider.addEventListener('input', () => {
+    if (heightValue) heightValue.textContent = `${heightSlider.value}m`;
+  });
+  heightSlider.addEventListener('change', () => {
+    localStorage.setItem(HEIGHT_KEY, heightSlider.value);
+    if (!playing) updateShadow();
+  });
+}
+
+// 現在の高さ（m）を取得
+function getBuildingHeight() {
+  if (!heightSlider) return 110;
+  const v = Number(heightSlider.value);
+  return Number.isFinite(v) ? v : 110;
+}
+
 // 日の出時刻セット
 const sunriseBtn = document.getElementById('sunriseBtn');
 if (sunriseBtn) {
@@ -190,7 +224,7 @@ if (sunriseBtn) {
   });
 }
 
-// ✅ 今日ボタン
+// 今日ボタン
 const todayBtn = document.getElementById('todayBtn');
 if (todayBtn) {
   todayBtn.addEventListener('click', () => {
@@ -261,7 +295,7 @@ function updateShadow() {
   if (sunPos.altitude <= 0) return;
 
   // 影の長さ（m）
-  const H = 110; // 建物高さ m
+  const H = getBuildingHeight(); // ← 可変高さを使用
   const shadowLen = H / Math.tan(sunPos.altitude);
 
   // 影の方向ベクトル（東=+x, 北=+y）
@@ -361,7 +395,7 @@ function togglePlay() {
     inputEl.value = toInputValue(next);
     updateShadow();
 
-    // 念のための保険（マージンが極端に小さい場合など）
+    // 念のための保険
     const sp = SunCalc.getPosition(new Date(inputEl.value), lat, lng);
     if (sp.altitude <= 0) {
       const fallback = new Date(new Date(inputEl.value).getTime() - SUN_MARGIN_MS);
@@ -371,7 +405,6 @@ function togglePlay() {
     }
   }, 600); // 再生速度はお好みで
 }
-
 
 // ===== イベント結線 =====
 const updateBtn = document.getElementById('updateBtn');
