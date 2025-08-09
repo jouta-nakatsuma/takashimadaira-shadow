@@ -4,3 +4,15 @@ html, body, #map {
   padding: 0;
 }
 
+.controls-right {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.controls-right button,
+.controls-right input,
+.controls-right label {
+  margin: 2px;
+}
