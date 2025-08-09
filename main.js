@@ -58,6 +58,13 @@ buildingPolygon.bindPopup('新棟予定地（高さ110m）');
   }
 })();
 
+// ✅ 初期表示：ポリゴンの中心を地図の中心に合わせる
+(function centerMapOnPolygon() {
+  const bounds = buildingPolygon.getBounds();
+  const center = bounds.getCenter();
+  map.setView(center, 18); // ズームは好みで（18〜19がおすすめ）
+})();
+
 // Leaflet.draw の編集対象グループ
 const editableGroup = L.featureGroup([buildingPolygon]).addTo(map);
 
@@ -123,6 +130,9 @@ if (resetPolyBtn) {
     localStorage.removeItem(STORAGE_KEY);
     buildingCoords.splice(0, buildingCoords.length, ...DEFAULT_BUILDING_COORDS);
     buildingPolygon.setLatLngs(DEFAULT_BUILDING_COORDS);
+    // 初期値に戻したら中心も合わせ直す
+    const b = buildingPolygon.getBounds();
+    map.setView(b.getCenter(), 18);
     updateShadow();
   });
 }
@@ -156,6 +166,9 @@ map.on(L.Draw.Event.EDITED, (e) => {
   e.layers.eachLayer((layer) => {
     if (layer === buildingPolygon) {
       syncBuildingCoordsFromPolygon();
+      // 編集確定後は中心に合わせ直すと親切
+      const b = buildingPolygon.getBounds();
+      map.setView(b.getCenter(), map.getZoom());
       updateShadow();
     }
   });
