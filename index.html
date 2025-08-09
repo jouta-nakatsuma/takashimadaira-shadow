@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>高島平影シミュレーター</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+</head>
+<body>
+  <div id="controls" style="position:absolute;top:10px;left:10px;z-index:1000;background:#fff;padding:10px;border-radius:10px;">
+    <label for="datetime">日時を選択：</label>
+    <input type="datetime-local" id="datetime" value="2025-10-01T10:00">
+    <button id="updateBtn">影を更新</button>
+    <button id="sunriseBtn">🌅 日の出時刻セット</button>
+    <button id="summerSolBtn">☀ 夏至</button>
+    <button id="winterSolBtn">❄ 冬至</button>
+    <button id="playBtn">▶ 再生</button>
+    <button id="editToggleBtn">✏️ 編集開始</button>
+    <button id="savePolyBtn">💾 保存</button>
+    <button id="resetPolyBtn">↩ 初期に戻す</button>
+    <button id="exportPolyBtn">⬇ エクスポート</button>
+  </div>
+
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <link
+  rel="stylesheet"
+  href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"
+  />
+  <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+  <script src="libs/suncalc.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
