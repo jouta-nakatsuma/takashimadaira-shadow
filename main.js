@@ -19,6 +19,9 @@ const DEFAULT_BUILDING_COORDS = [
   [35.788063, 139.65889]
 ];
 
+// 日の出/日の入りの縁で影が消えないようにするマージン（ms）
+const SUN_MARGIN_MS = 6 * 60 * 1000; // 6分（好みで調整可）
+
 // ローカル保存キー（バージョン付き）
 const STORAGE_KEY = 'buildingCoords_v2';
 
@@ -188,6 +191,17 @@ if (sunriseBtn) {
   });
 }
 
+// ✅ 今日ボタン
+const todayBtn = document.getElementById('todayBtn');
+if (todayBtn) {
+  todayBtn.addEventListener('click', () => {
+    if (playing) togglePlay();
+    const now = new Date();
+    document.getElementById('datetime').value = toInputValue(now);
+    updateShadow();
+  });
+}
+
 // 夏至・冬至セット
 const summerSolBtn = document.getElementById('summerSolBtn');
 const winterSolBtn = document.getElementById('winterSolBtn');
@@ -316,11 +330,13 @@ function togglePlay() {
   let now = new Date(inputEl.value);
   const { sunrise, sunset } = getSunTimesFor(now);
 
+  // 日の出前なら、日の出＋マージンから開始
   if (now < sunrise) {
-    now = sunrise;
+    now = new Date(sunrise.getTime() + SUN_MARGIN_MS);
     inputEl.value = toInputValue(now);
     updateShadow();
   }
+  // 日の入り後は再生できない
   if (now >= sunset) {
     alert('選択時刻は日の入り後です。別の日時を選ぶか、当日の日の出以降に設定してください。');
     return;
@@ -334,20 +350,29 @@ function togglePlay() {
     const { sunrise: sr, sunset: ss } = getSunTimesFor(cur);
     const next = addHours(cur, 1);
 
+    // 次のステップが日の入りを超えるなら、「日の入り直前」に合わせて停止
     if (next > ss) {
-      inputEl.value = toInputValue(ss);
-      updateShadow();
-      togglePlay(); // 自動停止
+      const justBeforeSunset = new Date(ss.getTime() - SUN_MARGIN_MS);
+      inputEl.value = toInputValue(justBeforeSunset);
+      updateShadow();    // ← 影が残った状態で描画
+      togglePlay();      // 自動停止
       return;
     }
 
     inputEl.value = toInputValue(next);
     updateShadow();
 
-    const sp = SunCalc.getPosition(next, lat, lng);
-    if (sp.altitude <= 0) togglePlay();
-  }, 600); // デモ速度：1時間=600ms（好みで変更）
+    // 念のための保険（マージンが極端に小さい場合など）
+    const sp = SunCalc.getPosition(new Date(inputEl.value), lat, lng);
+    if (sp.altitude <= 0) {
+      const fallback = new Date(new Date(inputEl.value).getTime() - SUN_MARGIN_MS);
+      inputEl.value = toInputValue(fallback);
+      updateShadow();
+      togglePlay();
+    }
+  }, 600); // 再生速度はお好みで
 }
+
 
 // ===== イベント結線 =====
 const updateBtn = document.getElementById('updateBtn');
