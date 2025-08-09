@@ -16,3 +16,16 @@ html, body, #map {
 .controls-right label {
   margin: 2px;
 }
+
+.height-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap; /* ラベルとスライダーの分断を防ぐ */
+}
+
+/* モバイルで触りやすく */
+#heightSlider {
+  width: 160px; /* 好みで調整 */
+  touch-action: pan-y; /* スクロール優先だがスライダー操作も安定 */
+}

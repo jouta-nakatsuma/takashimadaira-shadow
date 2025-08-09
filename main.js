@@ -181,26 +181,42 @@ map.on(L.Draw.Event.EDITED, (e) => {
 const heightSlider = document.getElementById('heightSlider');
 const heightValue  = document.getElementById('heightValue');
 
+function syncHeightLabel() {
+  if (heightSlider && heightValue) {
+    heightValue.textContent = `${heightSlider.value}m`;
+  }
+}
+
 // 初期化（保存値があれば反映）
 (function initHeight() {
   if (!heightSlider) return;
   const saved = localStorage.getItem(HEIGHT_KEY);
   if (saved !== null) {
-    heightSlider.value = String(Math.min(110, Math.max(3, Number(saved) || 110)));
+    const v = Math.min(110, Math.max(3, Number(saved) || 110));
+    heightSlider.value = String(v);
   }
-  // 表示更新
-  if (heightValue) heightValue.textContent = `${heightSlider.value}m`;
+  syncHeightLabel();
 })();
 
-// 値変更で保存＆影再描画
+// 値変更で保存＆影再描画（PC/モバイル両対応）
 if (heightSlider) {
+  // つまみを動かしている間も数値を更新
   heightSlider.addEventListener('input', () => {
-    if (heightValue) heightValue.textContent = `${heightSlider.value}m`;
+    syncHeightLabel();
+    if (!playing) updateShadow();
   });
+
+  // 指を離したときの最終確定
   heightSlider.addEventListener('change', () => {
+    syncHeightLabel();
     localStorage.setItem(HEIGHT_KEY, heightSlider.value);
     if (!playing) updateShadow();
   });
+
+  // iOS Safari対策：ドラッグ中に念のため同期（軽いのでpassiveでOK）
+  heightSlider.addEventListener('touchmove', () => {
+    syncHeightLabel();
+  }, { passive: true });
 }
 
 // 現在の高さ（m）を取得
