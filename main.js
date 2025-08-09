@@ -65,7 +65,7 @@ buildingPolygon.bindPopup('新棟予定地（高さ110m）');
 (function centerMapOnPolygon() {
   const bounds = buildingPolygon.getBounds();
   const center = bounds.getCenter();
-  map.setView(center, 18); // ズームは好みで（18〜19がおすすめ）
+  map.setView(center, 17); // ズームは好みで（18〜19がおすすめ）
 })();
 
 // Leaflet.draw の編集対象グループ
