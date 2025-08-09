@@ -61,11 +61,10 @@ buildingPolygon.bindPopup('新棟予定地（高さ110m）');
   }
 })();
 
-// ✅ 初期表示：ポリゴンの中心を地図の中心に合わせる
+// ✅ 初期表示：寄りすぎ防止で fitBounds（上限ズーム17）
 (function centerMapOnPolygon() {
-  const bounds = buildingPolygon.getBounds();
-  const center = bounds.getCenter();
-  map.setView(center, 17); // ズームは好みで（18〜19がおすすめ）
+  const b = buildingPolygon.getBounds();
+  map.fitBounds(b, { padding: [20, 20], maxZoom: 17 });
 })();
 
 // Leaflet.draw の編集対象グループ
@@ -133,9 +132,9 @@ if (resetPolyBtn) {
     localStorage.removeItem(STORAGE_KEY);
     buildingCoords.splice(0, buildingCoords.length, ...DEFAULT_BUILDING_COORDS);
     buildingPolygon.setLatLngs(DEFAULT_BUILDING_COORDS);
-    // 初期値に戻したら中心も合わせ直す
+    // 初期値に戻したら中心も合わせ直す（fitBoundsでズーム上限17）
     const b = buildingPolygon.getBounds();
-    map.setView(b.getCenter(), 18);
+    map.fitBounds(b, { padding: [20, 20], maxZoom: 17 });
     updateShadow();
   });
 }
@@ -169,9 +168,9 @@ map.on(L.Draw.Event.EDITED, (e) => {
   e.layers.eachLayer((layer) => {
     if (layer === buildingPolygon) {
       syncBuildingCoordsFromPolygon();
-      // 編集確定後は中心に合わせ直すと親切
+      // 編集確定後もポリゴン全体が入るように（現在ズームを上限として維持）
       const b = buildingPolygon.getBounds();
-      map.setView(b.getCenter(), map.getZoom());
+      map.fitBounds(b, { padding: [20, 20], maxZoom: map.getZoom() });
       updateShadow();
     }
   });
